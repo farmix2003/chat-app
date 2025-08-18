@@ -24,7 +24,10 @@ public class User {
     private String email;
 
     @Column(nullable = false)
-    private String password; // store hashed
+    private String password;
+
+    @Column(nullable = false)
+    private String role = "USER";
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
