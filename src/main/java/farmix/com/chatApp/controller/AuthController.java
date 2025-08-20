@@ -3,6 +3,7 @@ package farmix.com.chatApp.controller;
 import farmix.com.chatApp.config.JwtUtils;
 import farmix.com.chatApp.entity.User;
 import farmix.com.chatApp.repository.UserRepository;
+import farmix.com.chatApp.request.LoginReq;
 import farmix.com.chatApp.response.AuthResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.Response;
@@ -43,7 +44,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> loginUser(@RequestBody User user){
+    public ResponseEntity<AuthResponse> loginUser(@RequestBody LoginReq user){
         User isUserExist = userRepository.findByEmail(user.getEmail());
         if (isUserExist == null){
             AuthResponse response = new AuthResponse();
@@ -56,7 +57,7 @@ public class AuthController {
             response.setToken("");
             response.setMessage("Password is wrong. Please check your password!");
         }
-        String jwt = jwtUtils.generateToken(user.getUsername());
+        String jwt = jwtUtils.generateToken(isUserExist.getUsername());
         AuthResponse response = new AuthResponse();
         response.setToken(jwt);
         response.setMessage("Login successfully");

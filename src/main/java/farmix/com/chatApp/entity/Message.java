@@ -1,5 +1,7 @@
 package farmix.com.chatApp.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,29 +15,28 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class Message {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
     @JoinColumn(name = "conversation_id", nullable = false)
+    @JsonBackReference
     private Conversation conversation;
 
     @ManyToOne
     @JoinColumn(name = "sender_id", nullable = false)
+    @JsonBackReference
     private User sender;
 
     @Column(columnDefinition = "TEXT")
-    private String content;  // text messages
+    private String content;
 
-    private String messageType = "TEXT";  // TEXT, IMAGE, VIDEO, FILE, VOICE
-
-    private String mediaUrl; // for storing uploaded file paths
-
+    private String messageType = "TEXT";
+    private String mediaUrl;
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<MessageStatus> statuses;
 }
-

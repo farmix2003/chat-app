@@ -1,5 +1,6 @@
 package farmix.com.chatApp.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,21 +14,19 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class Conversation {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
-
-    private Boolean isGroup = false;
-
+    private String type;
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<ConversationMember> members;
 
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<Message> messages;
 }
-

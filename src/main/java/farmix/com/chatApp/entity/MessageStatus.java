@@ -1,5 +1,6 @@
 package farmix.com.chatApp.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,6 +20,7 @@ public class MessageStatus {
 
     @ManyToOne
     @JoinColumn(name = "message_id", nullable = false)
+    @JsonBackReference
     private Message message;
 
     @ManyToOne

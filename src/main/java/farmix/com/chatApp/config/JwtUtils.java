@@ -9,7 +9,7 @@ import java.security.Key;
 @Component
 public class JwtUtils {
 
-    private static final String SECRET = "secretkeyforjwt";
+    private static final String SECRET = "secretkeyforjwtfjw489tvn8B&Y#3nc7rcfreioHDUhD#U*$HDHJDUAInjndeuNDJNJkjnjzif3fucfnwbf7x4nv";
     private static final long EXPIRATION_TIME = 864000000;
 
     private Key getSecretKey() {
