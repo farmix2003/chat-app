@@ -1,5 +1,6 @@
 package farmix.com.chatApp.controller;
 
+import farmix.com.chatApp.dto.MessageDTO;
 import farmix.com.chatApp.entity.Message;
 import farmix.com.chatApp.entity.MessageStatus;
 import farmix.com.chatApp.service.MessageService;
@@ -16,7 +17,7 @@ public class MessageController {
     private final MessageService messageService;
 
     @PostMapping
-    public Message sendMessage(
+    public MessageDTO sendMessage(
             @RequestParam Long conversationId,
             @RequestParam Long senderId,
             @RequestParam String content
@@ -25,7 +26,7 @@ public class MessageController {
     }
 
     @GetMapping("/conversation/{conversationId}")
-    public List<Message> getChatHistory(@PathVariable Long conversationId) {
+    public List<MessageDTO> getChatHistory(@PathVariable Long conversationId) {
         return messageService.getChatHistory(conversationId);
     }
 

@@ -1,5 +1,6 @@
 package farmix.com.chatApp.controller;
 
+import farmix.com.chatApp.dto.ConversationDTO;
 import farmix.com.chatApp.entity.Conversation;
 import farmix.com.chatApp.request.ConversationRequest;
 import farmix.com.chatApp.service.ConversationService;
@@ -19,20 +20,26 @@ public class ConversationController {
     }
 
     @PostMapping
-    public ResponseEntity<Conversation> createConversation(@RequestBody ConversationRequest req) {
-        Conversation conversation = conversationService.createConversation(req, req.getUserIds());
+    public ResponseEntity<ConversationDTO> createConversation(@RequestBody ConversationRequest req) {
+        ConversationDTO conversation = conversationService.createConversation(req, req.getUserIds());
         return ResponseEntity.ok(conversation);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Conversation> getConversationById(@PathVariable Long id) {
-        Conversation conversation = conversationService.getConversationById(id);
+    public ResponseEntity<ConversationDTO> getConversationById(@PathVariable Long id) {
+        ConversationDTO conversation = conversationService.getConversationById(id);
         return ResponseEntity.ok(conversation);
     }
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Conversation>> getUserConversations(@PathVariable Long userId) {
-        List<Conversation> conversations = conversationService.getUserConversations(userId);
+    public ResponseEntity<List<ConversationDTO>> getUserConversations(@PathVariable Long userId) {
+        List<ConversationDTO> conversations = conversationService.getUserConversations(userId);
         return ResponseEntity.ok(conversations);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteConversation(@PathVariable Long id) {
+        conversationService.deleteConversation(id);
+        return ResponseEntity.ok("Conversation deleted successfully");
     }
 
 }

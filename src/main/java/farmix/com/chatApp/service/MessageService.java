@@ -1,5 +1,8 @@
 package farmix.com.chatApp.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import farmix.com.chatApp.dto.MessageDTO;
 import farmix.com.chatApp.entity.Conversation;
 import farmix.com.chatApp.entity.Message;
 import farmix.com.chatApp.entity.MessageStatus;
@@ -11,9 +14,11 @@ import farmix.com.chatApp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,13 +28,14 @@ public class MessageService {
     private final MessageStatusRepository messageStatusRepository;
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper objectMapper;
 
     private static final String TOPIC = "chat-messages";
 
-    // 1. Save message & create message statuses
-    public Message saveMessage(Long conversationId, Long senderId, String content) {
-        Conversation conversation = conversationRepository.findById(conversationId)
+    @Transactional
+    public MessageDTO saveMessage(Long conversationId, Long senderId, String content) {
+        Conversation conversation = conversationRepository.findByIdWithMembers(conversationId)
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
         User sender = userRepository.findById(senderId)
                 .orElseThrow(() -> new RuntimeException("Sender not found"));
@@ -44,12 +50,12 @@ public class MessageService {
 
         Message saved = messageRepository.save(message);
 
-        // Create statuses for all conversation participants
-        conversation.getMembers().forEach(user -> {
-            if (!user.getId().equals(sender.getId())) {
+        // Create statuses for all conversation participants except the sender
+        conversation.getMembers().forEach(member -> {
+            if (!member.getUser().getId().equals(sender.getId())) {
                 MessageStatus status = MessageStatus.builder()
                         .message(saved)
-                        .user(user.getUser())
+                        .user(member.getUser())
                         .status("SENT")
                         .updatedAt(LocalDateTime.now())
                         .build();
@@ -57,26 +63,57 @@ public class MessageService {
             }
         });
 
+        // Convert to DTO
+        MessageDTO messageDTO = new MessageDTO();
+        messageDTO.setType("MessageDTO");
+        messageDTO.setId(saved.getId());
+        messageDTO.setConversationId(saved.getConversation().getId());
+        messageDTO.setSenderId(saved.getSender().getId());
+        messageDTO.setContent(saved.getContent());
+        messageDTO.setMessageType(saved.getMessageType());
+        messageDTO.setMediaUrl(saved.getMediaUrl());
+        messageDTO.setCreatedAt(saved.getCreatedAt());
+
         // Publish to Kafka
-        kafkaTemplate.send(TOPIC, saved);
+        try {
+            String key = String.valueOf(conversationId);
+            String payload = objectMapper.writeValueAsString(messageDTO);
+            kafkaTemplate.send(TOPIC, key, payload);
+            System.out.println("Kafka published: " + payload);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize MessageDTO", e);
+        }
 
-        return saved;
+        return messageDTO;
     }
 
-    // 2. Get chat history by conversation
-    public List<Message> getChatHistory(Long conversationId) {
-        return messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId);
+    @Transactional(readOnly = true)
+    public List<MessageDTO> getChatHistory(Long conversationId) {
+        List<Message> messages = messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId);
+        return messages.stream()
+                .map(message -> {
+                    MessageDTO dto = new MessageDTO();
+                    dto.setType("MessageDTO");
+                    dto.setId(message.getId());
+                    dto.setConversationId(message.getConversation().getId());
+                    dto.setSenderId(message.getSender().getId());
+                    dto.setContent(message.getContent());
+                    dto.setMessageType(message.getMessageType());
+                    dto.setMediaUrl(message.getMediaUrl());
+                    dto.setCreatedAt(message.getCreatedAt());
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
-    // 3. Get unread messages for a user
+    @Transactional(readOnly = true)
     public List<MessageStatus> getUnreadMessages(Long userId) {
         return messageStatusRepository.findByUserIdAndStatus(userId, "SENT");
     }
 
-    // 4. Mark message as read
+    @Transactional
     public void markAsRead(Long messageId, Long userId) {
         MessageStatus status = messageStatusRepository.findByMessageIdAndUserId(messageId, userId);
-
         status.setStatus("READ");
         status.setUpdatedAt(LocalDateTime.now());
         messageStatusRepository.save(status);

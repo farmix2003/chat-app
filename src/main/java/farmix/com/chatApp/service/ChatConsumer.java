@@ -1,28 +1,40 @@
 package farmix.com.chatApp.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import farmix.com.chatApp.config.KafkaConfig;
+import farmix.com.chatApp.dto.MessageDTO;
 import farmix.com.chatApp.event.MessageEvent;
-import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
-@RequiredArgsConstructor
+@Component
 public class ChatConsumer {
+    private final ObjectMapper objectMapper;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-   @KafkaListener(topics = "chat-messages", groupId = "chat-app-group",concurrency = "3")
-    public void consume(@Payload String message) {
-       try {
-           MessageEvent event = objectMapper.readValue(message, MessageEvent.class);
-           System.out.println("Kafka consumed: " + message + " (sender=" + event.getSenderUsername() + ")");
-       } catch (JsonProcessingException e) {
-           throw new RuntimeException(e);
-       }
+    public ChatConsumer(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
+    @KafkaListener(topics = KafkaConfig.TOPIC_NAME, groupId = "chat-group")
+    public void consume(String messageJson) {
+        try {
+            // Parse JSON to check type
+            com.fasterxml.jackson.databind.JsonNode jsonNode = objectMapper.readTree(messageJson);
+            String type = jsonNode.has("type") ? jsonNode.get("type").asText() : null;
+
+            if ("MessageEvent".equals(type) || type == null) { // Fallback for MessageEvent without type
+                MessageEvent event = objectMapper.readValue(messageJson, MessageEvent.class);
+                System.out.println("Received MessageEvent: " + event.getContent());
+                // Process MessageEvent
+            } else if ("MessageDTO".equals(type)) {
+                MessageDTO message = objectMapper.readValue(messageJson, MessageDTO.class);
+                System.out.println("Received MessageDTO: " + message.getContent());
+                // Process MessageDTO
+            } else {
+                System.out.println("Unknown message type: " + type);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to deserialize message: " + messageJson, e);
+        }
+    }
 }

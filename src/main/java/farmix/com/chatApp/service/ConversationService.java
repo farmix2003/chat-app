@@ -1,5 +1,6 @@
 package farmix.com.chatApp.service;
 
+import farmix.com.chatApp.dto.ConversationDTO;
 import farmix.com.chatApp.entity.Conversation;
 import farmix.com.chatApp.entity.ConversationMember;
 import farmix.com.chatApp.entity.User;
@@ -22,7 +23,7 @@ public class ConversationService {
         this.userRepository = userRepository;
     }
 
-    public Conversation createConversation(ConversationRequest request, List<Long> userIds) {
+    public ConversationDTO createConversation(ConversationRequest request, List<Long> userIds) {
         List<User> participants = userRepository.findAllById(userIds);
 
         if (participants.size() < 2 || participants.size() != userIds.size()) {
@@ -46,17 +47,34 @@ public class ConversationService {
 
         newConversation.setMembers(members);
 
-        return conversationRepository.save(newConversation);
-    }
+        Conversation saved = conversationRepository.save(newConversation);
 
-    public Conversation getConversationById(Long id){
-        return conversationRepository.findById(id)
+        return mapToDto(saved);
+      }
+
+    public ConversationDTO getConversationById(Long id){
+
+        Conversation conversation = conversationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
+        return mapToDto(conversation);
     }
 
-    public List<Conversation> getUserConversations(Long userId){
-        return conversationRepository.findAllByMembersId(userId);
+    public List<ConversationDTO> getUserConversations(Long userId){
+        return conversationRepository.findAllByMembersId(userId).stream()
+                .map(this::mapToDto)
+                .toList();
     }
 
-
+    public void deleteConversation(Long conversationId){
+        conversationRepository.deleteById(conversationId);
+    }
+public ConversationDTO mapToDto(Conversation conversation){
+        ConversationDTO conversationDTO = new ConversationDTO();
+        conversationDTO.setId(conversation.getId());
+        conversationDTO.setName(conversation.getName());
+        conversationDTO.setType(conversation.getType());
+        conversationDTO.setCreatedAt(conversation.getCreatedAt());
+        conversationDTO.setMemberIds(conversation.getMembers().stream().map(ConversationMember::getUser).map(User::getId).toList());
+        return conversationDTO;
+}
 }

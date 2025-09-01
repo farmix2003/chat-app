@@ -1,20 +1,27 @@
 package farmix.com.chatApp.event;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class MessageEvent {
+    @JsonProperty("type")
+    private String type = "MessageEvent";
 
+    @JsonProperty("id")
     private Long id;
-    private String content;
-    private Long conversationId;
-    private String senderUsername;
-    private LocalDateTime timestamp;
 
+    @JsonProperty("conversationId")
+    private Long conversationId;
+
+    @JsonProperty("senderUsername")
+    private String senderUsername;
+
+    @JsonProperty("content")
+    private String content;
+
+    @JsonProperty("timestamp")
+    private LocalDateTime timestamp;
 }
