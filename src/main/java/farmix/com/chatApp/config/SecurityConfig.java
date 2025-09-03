@@ -28,7 +28,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->{
-                 auth.requestMatchers("/auth/**").permitAll()
+                    auth.requestMatchers("/ws/**").permitAll();
+                    auth.requestMatchers("/auth/**").permitAll();
+                    auth.requestMatchers("/api/conversations/**", "/api/messages/**").authenticated()
                                     .anyRequest().authenticated();
                 }
                 ).csrf(AbstractHttpConfigurer::disable)
