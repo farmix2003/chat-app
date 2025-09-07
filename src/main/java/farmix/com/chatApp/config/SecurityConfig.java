@@ -42,7 +42,7 @@ public class SecurityConfig {
     private Customizer<CorsConfigurer<HttpSecurity>> corsConfig() {
 
         CorsConfiguration cors = new CorsConfiguration();
-        cors.addAllowedOrigin("*");
+        cors.addAllowedOrigin("http://localhost:5173");
         cors.addAllowedMethod("*");
         cors.addAllowedHeader("*");
         cors.setAllowCredentials(true);
