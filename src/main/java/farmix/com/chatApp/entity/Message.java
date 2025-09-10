@@ -21,12 +21,11 @@ public class Message {
 
     @ManyToOne
     @JoinColumn(name = "conversation_id", nullable = false)
-    @JsonBackReference
+    @JsonBackReference("conversation-messages")
     private Conversation conversation;
 
     @ManyToOne
     @JoinColumn(name = "sender_id", nullable = false)
-    @JsonBackReference
     private User sender;
 
     @Column(columnDefinition = "TEXT")

@@ -19,7 +19,7 @@ public class ConversationMember {
 
     @ManyToOne
     @JoinColumn(name = "conversation_id", nullable = false)
-    @JsonBackReference
+    @JsonBackReference("conversation-members")
     private Conversation conversation;
 
     @ManyToOne

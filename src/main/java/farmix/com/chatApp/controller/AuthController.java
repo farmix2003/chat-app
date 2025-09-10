@@ -30,16 +30,16 @@ public class AuthController {
         User isUserExist = userRepository.findByEmail(user.getEmail());
 
         if (isUserExist != null){
-            return ResponseEntity.badRequest().body("User already exist");
+            return ResponseEntity.badRequest().body("User already exists");
         }
 
         User newUser = new User();
         newUser.setEmail(user.getEmail());
         newUser.setRole(user.getRole());
-        newUser.setCreatedAt(user.getCreatedAt());
         newUser.setPassword(passwordEncoder.encode(user.getPassword()));
         newUser.setUsername(user.getUsername());
         userRepository.save(newUser);
+
         return ResponseEntity.ok("User registered successfully");
     }
 

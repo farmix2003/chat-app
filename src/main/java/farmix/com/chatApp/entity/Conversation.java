@@ -23,10 +23,10 @@ public class Conversation {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @JsonManagedReference("conversation-members")
     private List<ConversationMember> members;
 
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @JsonManagedReference("conversation-messages")
     private List<Message> messages;
 }
